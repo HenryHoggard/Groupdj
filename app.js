@@ -40,4 +40,8 @@ io.on('connection', function(socket){
     io.sockets.emit('newsong', song);
     partyController.addSong(song, room);
   });
+  socket.on('deletesong', function(song,room){
+   io.sockets.emit('deletedsong', song);
+   partyController.deleteSong(song, room);
+  });
 });

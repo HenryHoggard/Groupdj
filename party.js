@@ -32,4 +32,15 @@ module.exports.addSong = function(song, room) {
  
 };
 
+module.exports.deleteSong = function(song, room) {
+  Party.findOneAndUpdate(
+    {name: room},
+    {$pull: {songlist: song}},
+    {safe: true},
+    function(err) {
+      console.log(err);
+    }
+  );
 
+
+};

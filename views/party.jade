@@ -32,6 +32,9 @@ block content
        th 
       
        th Song
+       
+       th
+ 
      tbody 
      if songlist 
       - each song in songlist
@@ -41,7 +44,10 @@ block content
             span.glyphicon.glyphicon-play
          td.song
           | #{song}
-
+         td.delete
+           button.deletebutton.btn.btn-default.btn(type='button')
+            span.glyphicon.glyphicon-trash
+ 
   div#player
   div#youtube 
   script(src="/jquery/dist/jquery.min.js")
@@ -126,7 +132,8 @@ block content
                   });
 
     td.html('<button id="pausebutton" type="button" class="btn btn-default pausebutton"> <span class="glyphicon glyphicon-pause"></span> </button>');
-     }); 
+     });
+    
 
     $(document).on('click','#pausebutton',function() {
     console.log(2);   
@@ -167,8 +174,8 @@ block content
    var player;
    function loadsong(id) {
        player = new YT.Player('player', {
-      height: '100',
-      width: '100',
+      height: '0',
+      width: '0',
       videoId: id,
       events: {
         'onReady': onPlayerReady,
@@ -198,3 +205,11 @@ block content
      player.playVideo();
  
    }
+   
+    $(document).on('click', '.deletebutton', function() { 
+     var tr = $(this).parent().parent(); 
+     var song  = tr.find(".song").text();     
+     socket.emit('deletesong', song, "#{room}");
+     tr.remove();
+
+    });
