@@ -1,0 +1,24 @@
+extends layout
+
+block content
+ .container-full
+  .row
+   .col-lg-12.text-center.front-text
+    img(src="/images/music.png")
+    h1.title GroupPlay
+    .slogan Choose and listen to music with friends!
+   .col-lg-2.col-md-offset-5 
+    .input-group
+     input#room.form-control.front(type="text", placeholder="Join a party" class="form-control")
+     span.input-group-btn
+       button#join.btn.btn-warning.btn-large.front
+         i.icon-white.icon-music
+         | Join
+   script(src="/jquery/dist/jquery.min.js")
+   script(src="/bootstrap/dist/js/bootstrap.min.js")
+   script.
+    $('#join').click(function(){
+      window.location.href='/party/'+$('#room').val();
+    });
+
+

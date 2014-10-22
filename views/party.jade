@@ -1,0 +1,200 @@
+extends layout
+
+block content
+ link(rel='Stylesheet', href='http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css')
+
+ .container
+    h1 
+       a(href="/") GroupPlay
+
+   
+  
+  .row
+
+    div.col-md-4.col-md-offset-3
+     h2
+      | Playlist:
+      a(href="/party/"+room) ##{room}
+
+     .input-group
+      input#song.form-control.front(type="text",  placeholder='Enter track' class="form-control")
+    
+      span.input-group-btn
+        button#addsong.btn.btn-warning.btn-large.front(type="submit")
+          i.icon-white.icon-music
+          | Add
+    
+
+  .div.col-md-6.col-md-offset-3
+    table#playlist.table.table-hover.col-md-6
+     thead
+      tr
+       th 
+      
+       th Song
+     tbody 
+     if songlist 
+      - each song in songlist
+        tr
+         td.buttontype
+           button.playbutton.btn.btn-default.btn(type='button')
+            span.glyphicon.glyphicon-play
+         td.song
+          | #{song}
+
+  div#player
+  div#youtube 
+  script(src="/jquery/dist/jquery.min.js")
+  script(src="/bootstrap/dist/js/bootstrap.min.js")
+  script(src='http://code.jquery.com/ui/1.11.2/jquery-ui.js')
+  script(src='/socket.io/socket.io.js')
+  script(src='http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js')
+  
+  script.
+    var socket = io();
+    $('#addsong').click(function(){
+    socket.emit('addsong', $('#song').val(), "#{room}");
+    $('#song').val('');
+    return false;
+     });
+    socket.on('newsong', function(song){
+     console.log('a '+song);
+     var html = '<tr><td class="buttontype"><button type="button" class="playbutton btn btn-default btn"><span class="glyphicon glyphicon-play"></span></button></td><td>'+song+'</td></tr>';
+     $('#playlist > tbody:last').append(html);
+     } );
+  script.
+    $(function() {
+    $("#song").autocomplete({
+    source: function( request, response ) {
+    $.ajax({
+    url: "http://developer.echonest.com/api/v4/song/search",
+    dataType: "jsonp",
+    data: {
+    results: 12,
+    api_key: "UFZRO659LHE8XWTZW", 
+    format:"jsonp",
+    combined:request.term
+    },
+    success: function( data ) {
+    response( $.map( data.response.songs, function(item) {
+    return {
+    label: item.artist_name +" - " + item.title,
+    value: item.artist_name +" - " + item.title,
+    id: item.id
+    }
+    }));
+    }
+    });
+    },
+    minLength: 3,
+    select: function( event, ui ) {
+    $("#log").empty();
+    $("#log").append(ui.item ? ui.item.id + ' ' + ui.item.label : '(nothing)');
+    },
+    });
+    });
+  script.
+   function googleApiClientReady(){
+       gapi.client.setApiKey('AIzaSyAl6J_4iSVqGRAfwXrkSsdSAgtgC2v3nQM');
+       gapi.client.load('youtube', 'v3', function() {
+       });
+    }
+   
+   $(document).on('click','.playbutton',function() {
+     var tr = $(this).parent().parent();
+     console.log(tr);
+     var td = $(this).parent();
+     var song = tr.find(".song").html();
+     var request = gapi.client.youtube.search.list({
+     q: song,
+     part: 'snippet',
+     maxResults: 1,
+      });
+      var id = request.execute(function(response) {
+      var str = JSON.stringify(response.result);
+      id = (response.result.items[0].id.videoId);
+      console.log(id);
+     loadsong(id);
+      // onYouTubePlayerAPIReady(id);  
+     // $('#player').empty();
+       console.log($(this));
+     // $('#player').html('<iframe width="1" height="1" id="ytplayer"  src="http://www.youtube.com/embed/'+id+'?autoplay=1&enablejsapi=1&apiid=ytplayer" frameborder="0" allowfullscreen></iframe>');
+      });
+              $('.buttontype').each(function() {
+                    console.log(1);
+                     $(this).html('<button type="button" class="playbutton btn btn-default"> <span class="glyphicon glyphicon-play"></span> </button>');
+                  });
+
+    td.html('<button id="pausebutton" type="button" class="btn btn-default pausebutton"> <span class="glyphicon glyphicon-pause"></span> </button>');
+     }); 
+
+    $(document).on('click','#pausebutton',function() {
+    console.log(2);   
+     player.pauseVideo();
+         $(this).parent().html('<button id="currentlypaused" type="button" class="playbutton btn btn-default"> <span class="glyphicon glyphicon-play"></span> </button>');
+  
+   });
+   
+   $(document).on('click', '#currentlypaused', function() {
+      player.playVideo();
+      $(this).parent().html('<button id="pausebutton" type="button" class="btn btn-default pausebutton"> <span class="glyphicon glyphicon-pause"></span> </button>');
+   });
+    
+   function search(track) {
+    //var q = $('#song').val();
+    var request = gapi.client.youtube.search.list({
+    q: track,
+    part: 'snippet',
+    maxResults: 1,  
+    });
+    var id = request.execute(function(response) {
+    var str = JSON.stringify(response.result);
+     id = (response.result.items[0].id.videoId);
+    });
+    console.log(id);
+    }
+  script(src='https://apis.google.com/js/client.js?onload=googleApiClientReady')
+
+
+  script.
+   //Load player api asynchronously.
+   
+   var tag = document.createElement('script');
+   tag.src = "https://www.youtube.com/player_api";
+   var firstScriptTag = document.getElementsByTagName('script')[0];
+   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+   var done = false;
+   var player;
+   function loadsong(id) {
+       player = new YT.Player('player', {
+      height: '100',
+      width: '100',
+      videoId: id,
+      events: {
+        'onReady': onPlayerReady,
+        'onStateChange': onPlayerStateChange
+      }
+    });
+    playVideo();
+   }
+   function onPlayerReady(evt) {
+    evt.target.playVideo();
+   }
+   function onPlayerStateChange(evt) {
+    if (evt.data == YT.PlayerState.ENDED && !done) {
+        setTimeout(stopVideo, 6000);
+        done = true;
+    }
+   }
+   function stopVideo() {
+    player.stopVideo();
+    }
+   
+   function pauseVideo() {
+    player.pauseVideo();
+   } 
+
+   function playVideo() {
+     player.playVideo();
+ 
+   }
