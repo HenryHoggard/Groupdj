@@ -33,6 +33,9 @@ module.exports.addSong = function(song, room) {
 };
 
 module.exports.deleteSong = function(song, room) {
+  if (song == "") { 
+   song = null;
+  }
   Party.findOneAndUpdate(
     {name: room},
     {$pull: {songlist: song}},

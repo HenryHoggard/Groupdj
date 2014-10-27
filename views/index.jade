@@ -23,5 +23,12 @@ block content
     $('#join').click(function(){
       window.location.href='/party/'+$('#room').val();
     });
+    $('#room').keypress(function(e) {
+      if(e.which == 13) {
+       window.location.href='/party/'+$('#room').val();
 
+      }
+
+
+    });
 

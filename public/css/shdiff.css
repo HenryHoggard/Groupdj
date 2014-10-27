@@ -4,6 +4,13 @@ font-family: 'Josefin Sans', sans-serif;
 
 }
 
+.nav-bar {
+ margin-top:0;
+ height: 50px;
+ border-bottom: 5px solid white;
+ background-color: #209820;
+};
+
 .title {
 font-family: 'Josefin Sans', sans-serif;
 font-size: 90;

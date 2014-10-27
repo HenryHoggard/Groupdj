@@ -2,15 +2,12 @@ extends layout
 
 block content
  link(rel='Stylesheet', href='http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css')
-
  .container
-    h1 
-       a(href="/") GroupPlay
-
+  h1   
+   a(href="/") Group.dj
    
   
   .row
-
     div.col-md-4.col-md-offset-3
      h2
       | Playlist:
@@ -58,16 +55,19 @@ block content
   
   script.
     var socket = io();
+    socket.emit('ping', '#{room}');
     $('#addsong').click(function(){
     socket.emit('addsong', $('#song').val(), "#{room}");
     $('#song').val('');
     return false;
-     });
+     });  
     socket.on('newsong', function(song){
      console.log('a '+song);
-     var html = '<tr><td class="buttontype"><button type="button" class="playbutton btn btn-default btn"><span class="glyphicon glyphicon-play"></span></button></td><td>'+song+'</td></tr>';
+     var html = '<tr><td class="buttontype"><button type="button" class="playbutton btn btn-default btn"><span class="glyphicon glyphicon-play"></span></button></td><td>'+song+'</td><td class="delete"><button type="button" class="deletebutton btn btn-default btn"><span class="glyphicon glyphicon-trash"></span></button></td></tr>';
      $('#playlist > tbody:last').append(html);
      } );
+    socket.on('deletedsong', function(song) {
+     });
   script.
     $(function() {
     $("#song").autocomplete({
@@ -100,13 +100,13 @@ block content
     });
     });
   script.
-   function googleApiClientReady(){
+    function googleApiClientReady(){
        gapi.client.setApiKey('AIzaSyAl6J_4iSVqGRAfwXrkSsdSAgtgC2v3nQM');
        gapi.client.load('youtube', 'v3', function() {
        });
     }
    
-   $(document).on('click','.playbutton',function() {
+    $(document).on('click','.playbutton',function() {
      var tr = $(this).parent().parent();
      console.log(tr);
      var td = $(this).parent();
@@ -138,22 +138,21 @@ block content
     $(document).on('click','#pausebutton',function() {
     console.log(2);   
      player.pauseVideo();
-         $(this).parent().html('<button id="currentlypaused" type="button" class="playbutton btn btn-default"> <span class="glyphicon glyphicon-play"></span> </button>');
-  
-   });
+         $(this).parent().html('<button id="currentlypaused" type="button" class="btn btn-default"> <span class="glyphicon glyphicon-play"></span> </button>');
+    });
    
-   $(document).on('click', '#currentlypaused', function() {
+    $(document).on('click', '#currentlypaused', function() {
       player.playVideo();
       $(this).parent().html('<button id="pausebutton" type="button" class="btn btn-default pausebutton"> <span class="glyphicon glyphicon-pause"></span> </button>');
-   });
-    
-   function search(track) {
-    //var q = $('#song').val();
-    var request = gapi.client.youtube.search.list({
-    q: track,
-    part: 'snippet',
-    maxResults: 1,  
     });
+    
+    function search(track) {
+     //var q = $('#song').val();
+     var request = gapi.client.youtube.search.list({
+     q: track,
+     part: 'snippet',
+     maxResults: 1,  
+     });
     var id = request.execute(function(response) {
     var str = JSON.stringify(response.result);
      id = (response.result.items[0].id.videoId);
@@ -162,17 +161,15 @@ block content
     }
   script(src='https://apis.google.com/js/client.js?onload=googleApiClientReady')
 
-
   script.
-   //Load player api asynchronously.
-   
+   function loadsong(id) {
    var tag = document.createElement('script');
    tag.src = "https://www.youtube.com/player_api";
    var firstScriptTag = document.getElementsByTagName('script')[0];
    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
    var done = false;
    var player;
-   function loadsong(id) {
+   //function loadsong(id) {
        player = new YT.Player('player', {
       height: '0',
       width: '0',
@@ -188,9 +185,8 @@ block content
     evt.target.playVideo();
    }
    function onPlayerStateChange(evt) {
-    if (evt.data == YT.PlayerState.ENDED && !done) {
-        setTimeout(stopVideo, 6000);
-        done = true;
+    if (evt.data == YT.PlayerState.ENDED) {
+       loadsong('gq-mBZ30AVo'); 
     }
    }
    function stopVideo() {
@@ -205,11 +201,16 @@ block content
      player.playVideo();
  
    }
-   
+  
+   $('#song').keypress(function(e){
+     if (e.which == 13) {
+       $('#addsong').click();  
+     }
+   });
     $(document).on('click', '.deletebutton', function() { 
      var tr = $(this).parent().parent(); 
      var song  = tr.find(".song").text();     
      socket.emit('deletesong', song, "#{room}");
      tr.remove();
 
-    });
+     });

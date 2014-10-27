@@ -35,13 +35,17 @@ app.get('/party/:room',partyController.index);
 
 
 io.on('connection', function(socket){
-  socket.on('addsong', function(song,room){
+   socket.on('ping', function(room) {
+    socket.join(room);
+    console.log('ping' + room);
+   });
+   socket.on('addsong', function(song,room){
     console.log(room);
-    io.sockets.emit('newsong', song);
+    io.to(room).emit('newsong', song);
     partyController.addSong(song, room);
   });
   socket.on('deletesong', function(song,room){
-   io.sockets.emit('deletedsong', song);
+   io.to(room).emit('deletedsong', song);
    partyController.deleteSong(song, room);
   });
 });
