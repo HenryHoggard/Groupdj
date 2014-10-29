@@ -63,7 +63,7 @@ block content
      });  
     socket.on('newsong', function(song){
      console.log('a '+song);
-     var html = '<tr><td class="buttontype"><button type="button" class="playbutton btn btn-default btn"><span class="glyphicon glyphicon-play"></span></button></td><td>'+song+'</td><td class="delete"><button type="button" class="deletebutton btn btn-default btn"><span class="glyphicon glyphicon-trash"></span></button></td></tr>';
+     var html = '<tr><td class="buttontype"><button type="button" class="playbutton btn btn-default btn"><span class="glyphicon glyphicon-play"></span></button></td><td class="song">'+song+'</td><td class="delete"><button type="button" class="deletebutton btn btn-default btn"><span class="glyphicon glyphicon-trash"></span></button></td></tr>';
      $('#playlist > tbody:last').append(html);
      } );
     socket.on('deletedsong', function(song) {
@@ -187,7 +187,23 @@ block content
    }
    function onPlayerStateChange(evt) {
     if (evt.data == YT.PlayerState.ENDED) {
-       loadsong('gq-mBZ30AVo'); 
+       var nextrow = $('#pausebutton').parent().parent('tr').next();
+       console.log(nextrow);
+       $("#pausebutton").parent().html('<button type="button" class="playbutton btn btn-default"> <span class="glyphicon glyphicon-play"></span> </button>');
+       var song = nextrow.find('.song')[0].innerHtml();
+       nextrow.find('.buttontype').innerHtml('<button id="pausebutton" type="button" class="btn btn-default pausebutton"> <span class="glyphicon glyphicon-pause"></span> </button>');
+       var request = gapi.client.youtube.search.list({
+        q: song,
+        part: 'snippet',
+        maxResults: 1,
+        });
+        var id = request.execute(function(response) {
+        var str = JSON.stringify(response.result);
+        id = (response.result.items[0].id.videoId);
+        loadsong(id);
+         
+        });
+       
     }
    }
    function stopVideo() {
